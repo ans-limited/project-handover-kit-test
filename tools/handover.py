@@ -252,8 +252,12 @@ def cmd_verify_github(root, cfg, repo, record=None):
     if not re.match(r'^[A-Za-z0-9-]+/[A-Za-z0-9._-]+$', repo):
         raise ToolError(f'{repo!r} is not OWNER/NAME')
     token = os.environ.get('GH_TOKEN') or os.environ.get('GITHUB_TOKEN')
+    gh = shutil.which('gh')
+    gh_ok = (not token and gh and subprocess.run([gh, 'auth', 'status'], stdout=subprocess.PIPE,
+                                                  stderr=subprocess.PIPE).returncode == 0)
     seen = {}
-    live = verify_github.http_fetch(token)
+    live = verify_github.gh_fetch(gh) if gh_ok else verify_github.http_fetch(token)
+    token = token or gh_ok   # only used below to say whether the read was authenticated
 
     def fetch(path):
         seen[path] = live(path)

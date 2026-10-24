@@ -18,3 +18,20 @@ Append-only. One section per checkpoint, written by tools/handover.py ledger-app
 
 ### Items opened
 - OI-0001: fill in STATE.md S3 (source documents, mandate, Owner).
+
+## v1 — 2026-10-24 — Kit tests work in initialised repositories; verify-github
+
+**Directive:** directives/v1/DIRECTIVE.md (Tier 2). **Baseline:** v0.
+
+### What was done
+- The kit's tests now build their fixture from `tools/tests/template/`, a pristine copy of the files
+  that `init` and checkpoints change. Before this, the first GitHub run of `handover-tests` on v0
+  failed: the tests copied this initialised repository and ran `init` on the copy.
+- Added `tools/tests/test_template.py` checks: no drift from the kit source; a fixture built from an
+  initialised repository works.
+- Added the read-only `verify-github` command (`tools/verify_github.py`), using `gh` or an
+  anonymous read; with tests.
+
+### Verification
+- Independent verification of the final content: `reports/VERIFICATION_v1.md`.
+- Owner approval: GitHub review only (not recorded here).

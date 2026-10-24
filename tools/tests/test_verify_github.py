@@ -144,6 +144,24 @@ class VerifyGithub(unittest.TestCase):
         r[f'/repos/{REPO}'][1].update(allow_squash_merge=True, allow_merge_commit=False, allow_rebase_merge=False)
         self.assertEqual(statuses(run(r, cfg)[0])['squash merging only'], vg.PASS)
 
+    def test_gh_transport_parses_status_and_body(self):
+        """gh api --include prints the status line, headers, a blank line, then the body."""
+        import subprocess
+        import sys
+        import tempfile
+        d = tempfile.mkdtemp(prefix='fake-gh-')
+        fake = os.path.join(d, 'fake_gh.py')
+        with open(fake, 'w', encoding='utf-8') as f:
+            f.write('import sys\n'
+                    'path = sys.argv[-1]\n'
+                    'if path.endswith("missing"):\n'
+                    '    sys.stdout.buffer.write(b"HTTP/2.0 404 Not Found\\r\\nContent-Type: application/json\\r\\n\\r\\n{\\"message\\": \\"Not Found\\"}")\n'
+                    '    sys.exit(1)\n'
+                    'sys.stdout.buffer.write(b"HTTP/2.0 200 OK\\r\\nContent-Type: application/json\\r\\n\\r\\n{\\"full_name\\": \\"acme/project\\"}")\n')
+        fetch = vg.gh_fetch([sys.executable, fake])
+        self.assertEqual(fetch('/repos/acme/project'), (200, {'full_name': 'acme/project'}))
+        self.assertEqual(fetch('/repos/acme/missing')[0], 404)
+
     def test_unreadable_repository_fails(self):
         cfg = policy()
         results, code = run({}, cfg)

@@ -94,7 +94,7 @@ class Pin(RepoTestCase):
 
     def test_pin_refuses_changed_file(self):
         rel = 'docs/decisions/R-0001-adopt-the-handover-documentation-method.md'
-        self.replace(rel, 'The previous project', 'The earlier project')
+        self.replace(rel, 'A single handover file', 'One single handover file')
         code, out = self.tool('pin', rel)
         self.assertEqual(code, 1)
         self.assertIn('immutable', out)

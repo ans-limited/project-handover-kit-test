@@ -166,7 +166,7 @@ class C6OpenItems(RepoTestCase):
 
 class C7Pins(RepoTestCase):
     def test_edited_pinned_decision(self):
-        self.replace(R1, 'The previous project', 'The earlier project')
+        self.replace(R1, 'A single handover file', 'One single handover file')
         self.assertFails('C7')
 
     def test_missing_pinned_file(self):

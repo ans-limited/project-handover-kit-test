@@ -1,0 +1,26 @@
+# Tag validation (design note s7.5): labels only; tags decide nothing. UNTESTED ON GITHUB.
+# No separate git fetch (review finding R4): with fetch-depth 0, actions/checkout fetches the
+# history of all branches and tags with its own credentials, so origin/master is already present.
+name: handover-tags
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  handover-tags:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate the tag target
+        run: |
+          set -eu
+          git rev-parse -q --verify refs/remotes/origin/master >/dev/null
+          git branch -f master refs/remotes/origin/master
+          python3 tools/check_docs.py --repo . --tag-check --tag "$GITHUB_REF_NAME" --commit "$GITHUB_SHA"
