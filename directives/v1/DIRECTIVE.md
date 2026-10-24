@@ -12,7 +12,7 @@
 Correct a defect found by the first GitHub run of `handover-tests` on v0: the kit's own tests built
 their fixtures by copying the live repository and running `init` on the copy, which fails once a
 repository has been initialised. Let the read-only `verify-github` command (present since v0) read
-through the GitHub CLI, so no token passes through the kit's code.
+through the GitHub CLI, so that on that path no token passes through the kit's code.
 
 ## 2. In scope
 
