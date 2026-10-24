@@ -1,6 +1,6 @@
 # STATE.md — Handover Kit Test
 
-CURRENT BASELINE: tag v0 (2026-10-20) — Repository initialised with the handover method
+CURRENT BASELINE: tag v1 (2026-10-24) — Kit tests work in initialised repositories; verify-github
 
 This file says what is true now and what to do next. It is rewritten at every checkpoint and
 never appended to. History is in the ledgers, rulings are in docs/decisions/. Limits are enforced
@@ -16,8 +16,10 @@ by tools/check_docs.py.
 
 ## S2. Current state
 
-- **Checkpoint v0:** the repository holds the documentation skeleton and its tools only. No
-  application code yet. Record: [LEDGER_0001](docs/history/LEDGER_0001.md), entry v0.
+- **Checkpoint v1:** the kit's tests build their fixture from `tools/tests/template/`, so they run
+  in this initialised repository; `verify-github` checks the GitHub settings. Record:
+  [LEDGER_0001](docs/history/LEDGER_0001.md), entry v1.
+- **Contents:** the handover kit, a dummy module (`src/example/`) and fake sample records (`data/`).
 - **Method in force:** R-0001 (documentation) and R-0002 (checkpoints as pull requests).
 - **GitHub protection:** configured as described in [GITHUB_SETUP](docs/GITHUB_SETUP.md), not yet
   verified.
@@ -59,7 +61,8 @@ and recorded in the ledger.
 
 - OI-0001 [Open] Fill in S3 (source documents, mandate, Owner) — directive v1
 - OI-0002 [Open] Core-domain boundary by dependency analysis — directive v1, R-0002 item 7
-- OI-0003 [Blocked] GitHub capability tests and configuration verification — docs/GITHUB_SETUP.md
+- OI-0003 [In progress] GitHub capability tests and configuration verification — docs/GITHUB_SETUP.md
+- OI-0004 [Blocked] Approval tests need a second, independent GitHub identity — docs/GITHUB_SETUP.md
 
 ## S8. Accepted limitations
 
@@ -67,4 +70,4 @@ None.
 
 ## S9. Next step
 
-Await the Owner's directive v1. Nothing beyond v0 is authorized.
+Apply the GitHub settings of docs/GITHUB_SETUP.md and run the capability tests that one identity permits.

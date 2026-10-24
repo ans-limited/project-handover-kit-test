@@ -252,8 +252,12 @@ def cmd_verify_github(root, cfg, repo, record=None):
     if not re.match(r'^[A-Za-z0-9-]+/[A-Za-z0-9._-]+$', repo):
         raise ToolError(f'{repo!r} is not OWNER/NAME')
     token = os.environ.get('GH_TOKEN') or os.environ.get('GITHUB_TOKEN')
+    gh = shutil.which('gh')
+    gh_ok = (not token and gh and subprocess.run([gh, 'auth', 'status'], stdout=subprocess.PIPE,
+                                                  stderr=subprocess.PIPE).returncode == 0)
     seen = {}
-    live = verify_github.http_fetch(token)
+    live = verify_github.gh_fetch(gh) if gh_ok else verify_github.http_fetch(token)
+    token = token or gh_ok   # only used below to say whether the read was authenticated
 
     def fetch(path):
         seen[path] = live(path)
@@ -355,6 +359,13 @@ def cmd_init(root, cfg, project, owner):
     cmd_pin(root, cfg, INIT_PINNED)
     subprocess.run(['git', '-C', root, 'config', 'core.hooksPath', '.githooks'], check=True)
     print('set core.hooksPath to .githooks')
+    # The hook must be executable in git's index, or git skips it on Linux and macOS; on Windows the
+    # file system has no executable bit, so it is set in the index explicitly.
+    for hook in sorted(os.listdir(P(root, '.githooks'))):
+        hp = P(root, f'.githooks/{hook}')
+        os.chmod(hp, os.stat(hp).st_mode | 0o111)
+        subprocess.run(['git', '-C', root, 'add', '--chmod=+x', f'.githooks/{hook}'], check=True)
+    print('marked the hooks executable')
     cmd_codeowners(root, cfg)
 
 

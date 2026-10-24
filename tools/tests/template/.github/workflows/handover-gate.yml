@@ -1,0 +1,32 @@
+# The governance gate (design note draft 4.1, s7.2). UNTESTED ON GITHUB: see docs/GITHUB_SETUP.md.
+# Rules for this file: no conditions, no path filters, no continue-on-error; tools/check_docs.py
+# rejects any of them (check C14). The job name must stay unique across all workflows.
+name: handover-gate
+
+on:
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  handover-gate:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out the PR head by commit ID, with full history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Run the trusted checker taken from the base commit
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -eu
+          echo "base=$BASE head=$HEAD"
+          mkdir -p "$RUNNER_TEMP/trusted"
+          git show "$BASE:tools/check_docs.py" > "$RUNNER_TEMP/trusted/check_docs.py"
+          python3 "$RUNNER_TEMP/trusted/check_docs.py" --repo . --pr --base "$BASE" --head "$HEAD" --ci

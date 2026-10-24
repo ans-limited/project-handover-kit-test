@@ -223,7 +223,7 @@ class Decisions(GitRepoCase):
         self.assertPRFails('routine/rule', 'T')
 
     def test_accepted_ruling_never_changes(self):
-        n = self.full_checkpoint(tier=2, work=lambda n: self.replace(R1, 'The previous project', 'The earlier project'))
+        n = self.full_checkpoint(tier=2, work=lambda n: self.replace(R1, 'A single handover file', 'One single handover file'))
         self.assertPRFails(f'checkpoint/v{n}', 'P3')
 
     def test_delete_and_rename_fail(self):
@@ -246,7 +246,7 @@ class Pins(GitRepoCase):
 
     def test_ruling_and_pin_edited_together_fails(self):
         def work(n):
-            self.replace(R1, 'The previous project', 'The earlier project')
+            self.replace(R1, 'A single handover file', 'One single handover file')
             sha = check_docs.sha256_bytes(open(self.path(R1), 'rb').read())
             lines = [(sha + '  ' + R1) if l.endswith('  ' + R1) else l for l in self.pins_text().split('\n')]
             self.write('docs/PINS.sha256', '\n'.join(lines))
@@ -358,6 +358,15 @@ class SnapshotFidelity(GitRepoCase):
         self.index_entry('routine/sub', '160000', self.root_commit, 'vendor/lib')
         f = self.assertPRFails('routine/sub', 'C11')
         self.assertTrue(any('submodule' in m for c, s, m, p in f.items))
+
+    def test_hook_without_executable_bit_fails(self):
+        """Found on GitHub's Linux runners: a hook stored as 100644 is skipped by git there."""
+        self.assertTrue(self.g('ls-files', '-s', '.githooks/pre-commit').startswith('100755'))
+        self.branch('routine/hookmode')
+        self.g('update-index', '--chmod=-x', '.githooks/pre-commit')
+        self.g('commit', '-q', '--no-verify', '-m', 'hook loses its executable bit')
+        f = self.assertPRFails('routine/hookmode', 'C11')
+        self.assertTrue(any('executable bit' in m for c, s, m, p in f.items))
 
     def test_case_collision_refused(self):
         self.index_entry('routine/case', '100644', self.blob('# a\n'), 'docs/Notes.txt')
@@ -602,7 +611,7 @@ class CheckerChanges(GitRepoCase):
     def test_weakened_checker_cannot_excuse_its_own_pr(self):
         def work(n):
             self.weaken()
-            self.replace(R1, 'The previous project', 'The earlier project')
+            self.replace(R1, 'A single handover file', 'One single handover file')
         n = self.full_checkpoint(tier=2, work=work)
         code, out = self.run_trusted(f'checkpoint/v{n}')
         self.assertEqual(code, 1, out)

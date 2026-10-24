@@ -503,6 +503,9 @@ def materialize(repo, treeish, dest):
             special.append(('symlink', path))
         elif kind == 'blob':
             blobs.append((sha, path))
+            if path.startswith('.githooks/') and mode != '100755':
+                # git skips a hook without the executable bit on Linux and macOS (found on GitHub's runners)
+                special.append(('hook-not-executable', path))
         else:
             raise GateError(f'unexpected tree entry {mode} {kind} {path}')
     if blobs:
@@ -928,6 +931,9 @@ class Snapshot:
                 self.fail('C11', 'file', f'{path} is a symbolic link; the policy does not allow them (allow_symlinks)')
             elif kind == 'submodule' and not cfg.get('allow_submodules', False):
                 self.fail('C11', 'file', f'{path} is a submodule; the policy does not allow them (allow_submodules)')
+            elif kind == 'hook-not-executable':
+                self.fail('C11', 'file', f'{path} is stored without the executable bit, so git skips it on Linux '
+                                         f'and macOS: run git add --chmod=+x {path}')
         allow = set(cfg['root_md_allowlist'])
         for n in sorted(os.listdir(self.root)):
             if n.lower().endswith('.md') and os.path.isfile(self.p(n)) and n not in allow:

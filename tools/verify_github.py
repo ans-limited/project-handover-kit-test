@@ -47,6 +47,30 @@ def http_fetch(token=None):
     return fetch
 
 
+def gh_fetch(gh='gh'):
+    """fetch(path) through the GitHub CLI: gh holds the credential, so no token passes through here."""
+    import re
+    import subprocess
+
+    cmd = list(gh) if isinstance(gh, (list, tuple)) else [gh]
+
+    def fetch(path):
+        p = subprocess.run(cmd + ['api', '--include', '-H', 'Accept: application/vnd.github+json',
+                            '-H', 'X-GitHub-Api-Version: 2022-11-28', path.lstrip('/')],
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out = p.stdout.decode('utf-8', 'replace')
+        parts = re.split(r'\r?\n\r?\n', out, maxsplit=1)
+        m = re.match(r'HTTP/\S+ (\d{3})', parts[0])
+        if not m:
+            return None, None
+        body = parts[1] if len(parts) > 1 else ''
+        try:
+            return int(m.group(1)), (json.loads(body) if body.strip() else None)
+        except ValueError:
+            return int(m.group(1)), None
+    return fetch
+
+
 def collect(fetch, repo, trunk):
     """Everything the evaluation needs, as {name: (status, json)}."""
     q = urllib.parse.quote

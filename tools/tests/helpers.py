@@ -22,6 +22,40 @@ import handover  # noqa: E402
 SKIP = shutil.ignore_patterns('.git', '__pycache__', '.venv', 'node_modules', 'vendor')
 OWNER = 'owner-test'
 REPO_NAME = 'acme/project'
+TEMPLATE_DIR = os.path.join(TESTS_DIR, 'template')
+
+# The kit's own files, copied from the repository the tests run in (code, hook, templates)...
+FIXTURE_COPY = ['tools', '.githooks', '.gitattributes', '.gitignore', 'AGENTS.md', 'directives/_TEMPLATE']
+FIXTURE_GLOBS = [('reports', '_TEMPLATE_'), ('docs/decisions', '_TEMPLATE_'), ('docs/design', '_TEMPLATE_')]
+# ...and every file that init or a checkpoint changes, from the pristine template in tools/tests/template/.
+
+
+def build_fixture(src_root, dest):
+    """A pristine, uninitialised copy of the kit for the tests, built from src_root's code and the
+    stored template. Works in the kit's own source and in a project that has adopted the kit, where
+    init has already run and checkpoints have changed STATE.md, the ledgers and the records."""
+    os.makedirs(dest)
+    for rel_path in FIXTURE_COPY:
+        s = os.path.join(src_root, *rel_path.split('/'))
+        d = os.path.join(dest, *rel_path.split('/'))
+        if os.path.isdir(s):
+            shutil.copytree(s, d, ignore=SKIP)
+        elif os.path.isfile(s):
+            os.makedirs(os.path.dirname(d), exist_ok=True)
+            shutil.copy2(s, d)
+    for folder, prefix in FIXTURE_GLOBS:
+        s = os.path.join(src_root, *folder.split('/'))
+        if os.path.isdir(s):
+            os.makedirs(os.path.join(dest, *folder.split('/')), exist_ok=True)
+            for name in os.listdir(s):
+                if name.startswith(prefix):
+                    shutil.copy2(os.path.join(s, name), os.path.join(dest, *folder.split('/'), name))
+    for dp, dns, fns in os.walk(TEMPLATE_DIR):
+        for fn in fns:
+            rel_path = os.path.relpath(os.path.join(dp, fn), TEMPLATE_DIR)
+            d = os.path.join(dest, rel_path)
+            os.makedirs(os.path.dirname(d), exist_ok=True)
+            shutil.copy2(os.path.join(dp, fn), d)
 
 
 class Result:
@@ -37,7 +71,7 @@ class RepoTestCase(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp(prefix='handover-test-')
         self.root = os.path.join(self.tmp, 'repo')
-        shutil.copytree(REPO_ROOT, self.root, ignore=SKIP)
+        build_fixture(REPO_ROOT, self.root)
 
     def tearDown(self):
         shutil.rmtree(self.tmp, ignore_errors=True)
