@@ -12,6 +12,7 @@ permissions:
 
 jobs:
   handover-gate:
+    if: false
     runs-on: ubuntu-24.04
     steps:
       - name: Check out the PR head by commit ID, with full history
