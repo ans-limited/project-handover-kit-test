@@ -29,8 +29,8 @@ Append-only. One section per checkpoint, written by tools/handover.py ledger-app
   failed: the tests copied this initialised repository and ran `init` on the copy.
 - Added `tools/tests/test_template.py` checks: no drift from the kit source; a fixture built from an
   initialised repository works.
-- Added the read-only `verify-github` command (`tools/verify_github.py`), using `gh` or an
-  anonymous read; with tests.
+- The read-only `verify-github` command (present since v0) now reads through the GitHub CLI
+  when it is signed in, so no token passes through the kit's code; with a test.
 - The pre-commit hook is now stored as executable. This checkpoint's first `handover-tests` run on
   GitHub (Linux) failed 7 hook tests because git skipped the hook stored as 100644; on Windows git
   ignores the bit, so local runs had passed. `init` marks hooks executable; C11 refuses one that is not.
