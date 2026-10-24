@@ -31,6 +31,9 @@ Append-only. One section per checkpoint, written by tools/handover.py ledger-app
   initialised repository works.
 - Added the read-only `verify-github` command (`tools/verify_github.py`), using `gh` or an
   anonymous read; with tests.
+- The pre-commit hook is now stored as executable. This checkpoint's first `handover-tests` run on
+  GitHub (Linux) failed 7 hook tests because git skipped the hook stored as 100644; on Windows git
+  ignores the bit, so local runs had passed. `init` marks hooks executable; C11 refuses one that is not.
 
 ### Verification
 - Independent verification of the final content: `reports/VERIFICATION_v1.md`.

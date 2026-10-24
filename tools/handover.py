@@ -359,6 +359,13 @@ def cmd_init(root, cfg, project, owner):
     cmd_pin(root, cfg, INIT_PINNED)
     subprocess.run(['git', '-C', root, 'config', 'core.hooksPath', '.githooks'], check=True)
     print('set core.hooksPath to .githooks')
+    # The hook must be executable in git's index, or git skips it on Linux and macOS; on Windows the
+    # file system has no executable bit, so it is set in the index explicitly.
+    for hook in sorted(os.listdir(P(root, '.githooks'))):
+        hp = P(root, f'.githooks/{hook}')
+        os.chmod(hp, os.stat(hp).st_mode | 0o111)
+        subprocess.run(['git', '-C', root, 'add', '--chmod=+x', f'.githooks/{hook}'], check=True)
+    print('marked the hooks executable')
     cmd_codeowners(root, cfg)
 
 

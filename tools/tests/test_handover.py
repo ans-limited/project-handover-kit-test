@@ -159,6 +159,8 @@ class Init(RepoTestCase):
         self.assertIn('/tools/ @a-owner', self.read('.github/CODEOWNERS'))
         hp = subprocess.run(['git', '-C', self.root, 'config', 'core.hooksPath'], stdout=subprocess.PIPE)
         self.assertEqual(hp.stdout.strip(), b'.githooks')
+        mode = subprocess.run(['git', '-C', self.root, 'ls-files', '-s', '.githooks/pre-commit'], stdout=subprocess.PIPE)
+        self.assertTrue(mode.stdout.startswith(b'100755'), mode.stdout)   # executable in the index, on Windows too
         self.assertPasses(expect_tag='v0')
 
     def test_init_refused_outside_git(self):

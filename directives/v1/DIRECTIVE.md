@@ -21,10 +21,13 @@ repository has been initialised. Add the read-only `verify-github` command.
    repository is pristine and works.
 3. `tools/verify_github.py` and the `verify-github` command in `tools/handover.py`, with tests.
 4. Test fixture text updated to the generic R-0001 reason.
+5. `.githooks/pre-commit` stored as executable (mode 100755): the first `handover-tests` run of
+   this checkpoint on GitHub's Linux runner showed that git skips the hook when it is stored as
+   100644. `init` now marks hooks executable in the index, and C11 refuses a non-executable hook.
 
 ## 3. Out of scope
 
-- Any change outside `tools/` other than this checkpoint's own records.
+- Any change outside `tools/` and the hook's file mode, other than this checkpoint's own records.
 - GitHub settings; they are applied after this checkpoint.
 
 ## 4. Acceptance

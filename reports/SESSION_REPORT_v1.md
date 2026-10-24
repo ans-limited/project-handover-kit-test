@@ -13,7 +13,9 @@
 | 2 | tools/tests/helpers.py | fixture built from the template (build_fixture) | test_template |
 | 3 | tools/tests/test_template.py | added | 2 tests |
 | 4 | tools/verify_github.py, tools/handover.py | verify-github command | test_verify_github, 8 tests |
-| 5 | STATE.md, docs/history, directives/v1 | checkpoint records | gate |
+| 5 | .githooks/pre-commit | mode 100644 to 100755 | git ls-files -s |
+| 6 | tools/check_docs.py, tools/handover.py | C11 refuses a non-executable hook; init marks hooks executable | test_pr, test_handover |
+| 7 | STATE.md, docs/history, directives/v1 | checkpoint records | gate |
 
 ## Test / regression status
 

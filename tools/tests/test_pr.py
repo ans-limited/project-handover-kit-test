@@ -359,6 +359,15 @@ class SnapshotFidelity(GitRepoCase):
         f = self.assertPRFails('routine/sub', 'C11')
         self.assertTrue(any('submodule' in m for c, s, m, p in f.items))
 
+    def test_hook_without_executable_bit_fails(self):
+        """Found on GitHub's Linux runners: a hook stored as 100644 is skipped by git there."""
+        self.assertTrue(self.g('ls-files', '-s', '.githooks/pre-commit').startswith('100755'))
+        self.branch('routine/hookmode')
+        self.g('update-index', '--chmod=-x', '.githooks/pre-commit')
+        self.g('commit', '-q', '--no-verify', '-m', 'hook loses its executable bit')
+        f = self.assertPRFails('routine/hookmode', 'C11')
+        self.assertTrue(any('executable bit' in m for c, s, m, p in f.items))
+
     def test_case_collision_refused(self):
         self.index_entry('routine/case', '100644', self.blob('# a\n'), 'docs/Notes.txt')
         second = self.blob('# b\n')
