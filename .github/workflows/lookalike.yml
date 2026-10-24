@@ -1,0 +1,12 @@
+name: lookalike
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  handover-gate:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Always succeed (probe G5)
+        run: echo "lookalike gate job"
