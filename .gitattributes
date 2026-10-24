@@ -1,0 +1,12 @@
+# LF everywhere in the working tree, on every OS (check_docs.py C12 rejects CR line endings).
+* text=auto eol=lf
+
+# Evidence is byte-exact: git must never normalise it.
+directives/*/evidence/** -text -diff
+
+*.png binary
+*.jpg binary
+*.pdf binary
+*.zip binary
+*.xlsx binary
+*.docx binary

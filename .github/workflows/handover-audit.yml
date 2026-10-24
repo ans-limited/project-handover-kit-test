@@ -1,0 +1,59 @@
+# Master audit (design note s7.4): detection after the fact. UNTESTED ON GITHUB.
+# The API calls below are assumptions to be confirmed by live tests G13 and G14.
+# The marked blocks are extracted and executed by tools/tests/test_workflows.py.
+name: handover-audit
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  handover-audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Audit the new main commit against its pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          C: ${{ github.sha }}
+        run: |
+          set -eu
+          mkdir -p "$RUNNER_TEMP/a"
+          # BEGIN trusted-checker (review finding R6, fix-check finding F2)
+          # Root status comes from the raw commit header; a shallow clone hides parents from rev-list.
+          git cat-file -e "$C^{commit}"
+          PARENTS=$(git cat-file commit "$C" | sed -n '/^$/q;/^parent /p')
+          if [ -z "$PARENTS" ]; then
+            echo "root commit: no trusted parent exists; the bootstrap exception uses its own checker"
+            git show "$C:tools/check_docs.py" > "$RUNNER_TEMP/a/check_docs.py"
+          else
+            if [ "$(git rev-parse --is-shallow-repository)" != "false" ]; then
+              echo "shallow clone: the trusted checker needs the full history" >&2
+              exit 1
+            fi
+            git show "$C^:tools/check_docs.py" > "$RUNNER_TEMP/a/check_docs.py"
+          fi
+          # END trusted-checker
+          # BEGIN api (review finding R5: --slurp returns one JSON document of all pages)
+          gh api --paginate --slurp "repos/$REPO/commits/$C/pulls" > "$RUNNER_TEMP/a/prs.json"
+          N=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); d=[x for p in d for x in (p if isinstance(p, list) else [p])]; m=[p for p in d if p.get('merge_commit_sha')==sys.argv[2]]; print(m[0]['number'] if len(m)==1 else '')" "$RUNNER_TEMP/a/prs.json" "$C")
+          if [ -n "$N" ]; then
+            gh api --paginate --slurp "repos/$REPO/pulls/$N/reviews" > "$RUNNER_TEMP/a/reviews.json"
+            # END api
+            # BEGIN authenticated-fetch (review finding R4: credentials for this one command only)
+            AUTH=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\n')
+            echo "::add-mask::$AUTH"
+            git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $AUTH" fetch --no-tags origin "+refs/pull/$N/head:refs/pull/$N/head"
+            # END authenticated-fetch
+          else
+            echo '[]' > "$RUNNER_TEMP/a/reviews.json"
+          fi
+          python3 "$RUNNER_TEMP/a/check_docs.py" --repo . --audit --commit "$C" --prs "$RUNNER_TEMP/a/prs.json" --reviews "$RUNNER_TEMP/a/reviews.json" --repo-name "$REPO"

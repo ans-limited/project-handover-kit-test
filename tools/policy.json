@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "_comment": "The single policy of tools/check_docs.py (design note draft 4.1, sections 3, 8 and 11). A change to this file is Tier 2 and applies only after it merges.",
+
+  "owner": "@srahman75",
+  "trunk": "main",
+  "review_policy": {
+    "owner_approval_checkpoint": true,
+    "owner_approval_routine": true,
+    "_comment": "Routine PRs need the Owner's approval until live test G1 validates merging them on CI alone (Owner decision, 2026-10-20)."
+  },
+
+  "paths": {
+    "gate": ["tools/**", ".githooks/**", ".github/**", ".gitattributes", "CLAUDE.md", "AGENTS.md"],
+    "templates": ["directives/_TEMPLATE/**", "reports/_TEMPLATE_*.md", "docs/decisions/_TEMPLATE_*.md", "docs/design/_TEMPLATE_*.md"],
+    "core": [],
+    "reserved_top_level": ["directives", "reports", "docs", "tools", ".github", ".githooks", "STATE.md", "CLAUDE.md", "AGENTS.md", ".gitattributes"]
+  },
+
+  "gate": {"workflow": ".github/workflows/handover-gate.yml", "job": "handover-gate"},
+
+  "github_profile": {
+    "required_checks": ["handover-gate", "handover-tests"],
+    "actions_app_id": 15368,
+    "require_last_push_approval": true,
+    "_comment": "Read by tools/handover.py verify-github. actions_app_id is the expected source of the required checks (the GitHub Actions app); confirm it against an observed ruleset before relying on it."
+  },
+
+  "allow_symlinks": false,
+  "allow_submodules": false,
+
+  "state_file": "STATE.md",
+  "state_warn_bytes": 30000,
+  "state_max_bytes": 50000,
+  "preamble_max_bytes": 1500,
+  "banner_max_chars": 300,
+  "state_max_line_chars": 400,
+  "sections": [
+    {"id": "S1", "title": "Reading rules", "max_bytes": 2000},
+    {"id": "S2", "title": "Current state", "max_bytes": 8000},
+    {"id": "S3", "title": "Governing baseline and mandate", "max_bytes": 3000},
+    {"id": "S4", "title": "Standing rules", "max_bytes": 5000},
+    {"id": "S5", "title": "Decisions in force", "max_bytes": 12000},
+    {"id": "S6", "title": "Verification baseline", "max_bytes": 3000},
+    {"id": "S7", "title": "Open items", "max_bytes": 10000},
+    {"id": "S8", "title": "Accepted limitations", "max_bytes": 5000},
+    {"id": "S9", "title": "Next step", "max_bytes": 2000}
+  ],
+  "state_forbidden_patterns": [
+    {"name": "SHA-256 hash", "regex": "(?<![0-9A-Fa-f])[0-9A-Fa-f]{64}(?![0-9A-Fa-f])"},
+    {"name": "full git object id", "regex": "(?<![0-9a-f])[0-9a-f]{40}(?![0-9a-f])"},
+    {"name": "uuid", "regex": "[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}"},
+    {"name": "blockquote (verbatim text belongs in a decision or evidence file)", "regex": "^\\s*>"}
+  ],
+  "register_section": "S5",
+  "open_items_section": "S7",
+  "open_item_regex": "^- (OI-\\d{4}) \\[([^\\]]+)\\] \\S",
+  "open_item_statuses": ["Open", "Blocked", "In progress"],
+
+  "decisions_dir": "docs/decisions",
+  "decision_max_bytes": 20000,
+  "pins_file": "docs/PINS.sha256",
+
+  "history_dir": "docs/history",
+  "ledger_register": "docs/history/LEDGERS.md",
+  "ledger_max_bytes": 500000,
+  "ledger_entry_max_bytes": 15000,
+  "ledger_header_max_bytes": 1000,
+
+  "directives_dir": "directives",
+  "directive_warn_bytes": 10000,
+  "directive_max_bytes": 15000,
+
+  "reports_dir": "reports",
+  "report_max_bytes": 40000,
+  "verification_max_bytes": 20000,
+
+  "design_dir": "docs/design",
+  "design_max_bytes": 60000,
+  "design_forbidden_name_regex": "(?i)(_rev\\d+|_v\\d+|_draft\\d*|_old|_copy|_final|_new)\\.md$",
+
+  "readme_max_bytes": 4000,
+  "protocol_files": {"CLAUDE.md": 20000, "AGENTS.md": 20000},
+  "root_md_allowlist": ["README.md", "STATE.md", "CLAUDE.md", "AGENTS.md"],
+
+  "text_extensions": [".md", ".json", ".py", ".yml", ".yaml", ".txt", ".sha256", ".csv", ".php", ".js", ".ts", ".sql", ".xml"],
+  "text_skip_dirs": [".git", "node_modules", "vendor", "evidence", "__pycache__", ".venv"]
+}

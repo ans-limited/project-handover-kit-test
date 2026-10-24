@@ -1,0 +1,4 @@
+# Immutable files: accepted decisions, resolved CRs and closed ledgers.
+# Format: <sha256>  <path from the repository root>. Add lines only with tools/handover.py pin.
+1afd646c571220b999bcfe024253962156c5e00743e8d09d80fb12b09ba9927f  docs/decisions/R-0001-adopt-the-handover-documentation-method.md
+ff8358a718f2294e94e86bc3b651031802b24cde38fb9f12c912a3bb28126cf1  docs/decisions/R-0002-checkpoints-as-pull-requests.md

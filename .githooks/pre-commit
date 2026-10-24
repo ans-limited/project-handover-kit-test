@@ -1,0 +1,20 @@
+#!/bin/sh
+# Local rules of design note s4 on the staged snapshot. Enabled by: python tools/handover.py init
+# (git config core.hooksPath .githooks). This hook is an early warning; the PR gate decides.
+# On Windows, "python3" may be a Microsoft Store stub that exists but does not run,
+# so each candidate is tried for real before it is used.
+PY=
+for cand in python3 python py; do
+  if "$cand" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)' >/dev/null 2>&1; then
+    PY=$cand
+    break
+  fi
+done
+if [ -z "$PY" ]; then
+  echo "pre-commit: no working Python 3.8+ found; commit refused." >&2
+  exit 1
+fi
+"$PY" tools/check_docs.py --staged --quiet || {
+  echo "pre-commit: the local rules did not pass; commit refused." >&2
+  exit 1
+}
